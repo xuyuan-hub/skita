@@ -1,0 +1,17 @@
+{
+  "display_name": "CRISPResso 运行记录",
+  "description": "每次 CRISPResso pipeline 运行的概要信息",
+  "version": 1,
+  "fields": [
+    {"name": "project_name", "type": "text", "required": true},
+    {"name": "csv_file", "type": "file_path", "required": true},
+    {"name": "r1_file", "type": "text", "required": true},
+    {"name": "r2_file", "type": "text", "required": true},
+    {"name": "total_samples", "type": "number", "required": true},
+    {"name": "success_samples", "type": "number", "required": true},
+    {"name": "failed_samples", "type": "json", "required": false},
+    {"name": "mutation_file", "type": "file_path", "required": false},
+    {"name": "output_dir", "type": "text", "required": true},
+    {"name": "run_date", "type": "date", "required": true}
+  ]
+}

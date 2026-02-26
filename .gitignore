@@ -1,0 +1,5 @@
+__pycache__/
+.claude/skills/crispresso/genomes/*
+.claude/skills/crispresso/tests/data/*
+data/files/crispresso/*
+data/*.db

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker --version)",
+      "Bash(docker image inspect pinellolab/crispresso2:latest --format '{{.Id}}')",
+      "Bash(python3 /c/Users/yhh/pythonProjects/skita/scripts/db.py help)",
+      "Bash(python3 -c \":*)"
+    ]
+  }
+}
