@@ -27,8 +27,9 @@ skita/
 ├── meta/                      ← Schema 注册目录（skill 运行时自动安装）
 └── data/
     ├── skita.db               ← 唯一的本地数据库（所有 skill 共用）
-    ├── files/                 ← 文件归档存储（按 skill 分子目录）
-    └── exports/               ← 导出结果
+    ├── files/                 ← 长期归档（按 skill/月 分目录）
+    ├── workspace/             ← 临时工作区（分析中间产物）
+    └── exports/               ← 用户导出文件
 ```
 
 ---
@@ -40,7 +41,40 @@ skita/
    - **源头在 Skill**：每个 skill 在自己的 `meta/` 下定义 schema JSON，随 skill 分发
    - **注册在项目**：skill 运行时自动将 schema 复制到项目 `meta/`，`DB.ensure_table()` 从这里读取建表
 3. **本地优先** — 所有数据默认存本地，仅用户主动要求时才同步中心库
-4. **文件按类归档** — `Files.save(source, category="<skill名>")` → `data/files/<skill名>/<YYYY-MM>/`
+4. **文件分层管理** — `data/` 下有三个目录，用途严格区分：
+
+### `data/` 目录规范
+
+```
+data/
+├── skita.db              ← 数据库（唯一）
+├── files/                ← 长期归档（分析产出的重要文件）
+│   ├── <skill名>/        ← 按 skill 分子目录
+│   │   └── <YYYY-MM>/   ← 按月分子目录
+│   │       ├── result.json
+│   │       └── report.png
+│   └── ...
+├── exports/              ← 用户导出（仅用户主动要求导出时使用）
+│   └── <描述性文件名>     ← 如 ice_summary_2026-02.csv
+└── workspace/            ← 临时工作区（分析过程中的中间产物）
+    └── <skill名>/
+        └── <项目名_时间戳>/
+            └── ...       ← 分析工具的原始输出
+```
+
+**三个目录的用途区别**：
+
+| 目录 | 用途 | 写入方式 | 生命周期 |
+|------|------|----------|----------|
+| `data/files/` | 长期归档，存入数据库引用 | `Files.save(path, category="<skill>")` | 永久保留 |
+| `data/exports/` | 用户主动要求的导出文件 | `Files.save_export(content, filename)` | 用户自行管理 |
+| `data/workspace/` | 分析过程的临时工作目录 | skill 直接写入，分析完成后可清理 | 临时，可删除 |
+
+**规则**：
+- 分析工具（如 `synthego_ice --out`、`CRISPRessoPooled`）的输出 → `data/workspace/<skill>/<项目名>/`
+- 分析完成后，从 workspace 中挑选重要文件 → `Files.save()` 归档到 `data/files/`
+- **禁止**将分析工具的原始输出直接写入 `data/files/` 或 `data/exports/`
+- `data/exports/` 仅用于用户说"导出"、"下载"、"生成报告"时使用
 
 ---
 
@@ -53,6 +87,28 @@ skita/
 3. **存储结果** → skill 自动安装 schema、写入 `data/skita.db`、归档文件到 `data/files/`
 4. **查询数据** → `DB().query("SELECT ... FROM data_<schema> WHERE ...")`
 5. **同步中心库**（用户主动要求时）→ `scripts/central.py`
+
+---
+
+## 依赖冲突处理原则
+
+当 skill 的依赖包与项目主环境冲突时（如版本锁定、不兼容等），**在 skill 目录内创建独立虚拟环境**：
+
+1. **判断是否冲突** — skill 依赖的包版本与主环境不兼容，或 skill 锁定了旧版本（如 `synthego-ice` 要求 `pytest==5.2.2`）
+2. **创建 skill 级虚拟环境** — 在 skill 目录下创建 `.venv/`：
+   ```bash
+   python -m venv .claude/skills/<name>/.venv
+   .claude/skills/<name>/.venv/Scripts/pip install <packages>   # Windows
+   .claude/skills/<name>/.venv/bin/pip install <packages>       # Linux/Mac
+   ```
+3. **SKILL.md 使用正确的 Python** — 所有命令通过 skill 的 venv 执行：
+   ```bash
+   .claude/skills/<name>/.venv/Scripts/python -m <module>       # Windows
+   .claude/skills/<name>/.venv/bin/python -m <module>           # Linux/Mac
+   ```
+4. **skill 的 `.venv/` 不入 Git** — 已在 `.gitignore` 中排除
+
+> 原则：主环境保持干净，skill 依赖隔离，避免互相污染。
 
 ---
 
@@ -100,16 +156,6 @@ skita/
 2. **自动安装** — 存储脚本在写入前将 schema 复制到项目 `meta/`，再调用 `DB.ensure_table()`
 3. **表名 = 文件名** — `meta/crispr_mutation_run.json` → 表 `data_crispr_mutation_run`
 4. **文件归档** — `Files.save(path, category="<skill名>")`
-
----
-
-## 已有 Skills
-
-| Skill | 路径 | 数据表 | 用途 |
-|-------|------|--------|------|
-| CRISPR Mutation | `.claude/skills/crispr-mutation/` | `data_crispr_mutation_run`、`data_crispr_mutation_sample` | CRISPR/Cas9 突变分析 pipeline (NGS) |
-| ICE Analysis | `.claude/skills/ice-analysis/` | `data_ice_run`、`data_ice_result` | CRISPR 编辑分析 (Sanger 测序) |
-| Web Dashboard | `.claude/skills/web-dashboard/` | - | Streamlit 网页界面，数据可视化管理 |
 
 ---
 

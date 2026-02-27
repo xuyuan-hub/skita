@@ -67,8 +67,10 @@ synthego_ice \
     --control data/control.ab1 \
     --edited data/edited.ab1 \
     --target AACCAGTTGCAGGCGCCCCA \
-    --out results/sample1
+    --out data/workspace/ice-analysis/<项目名>/sample1
 ```
+
+> `--out` 必须指向 `data/workspace/ice-analysis/`，分析完成后通过 `Files.save()` 将重要文件归档到 `data/files/`。
 
 ### 批量分析
 
@@ -85,7 +87,7 @@ synthego_ice \
 synthego_ice_batch \
     --in samples.xlsx \
     --data data/ \
-    --out results/
+    --out data/workspace/ice-analysis/<项目名>/
 ```
 
 ### Python 调用
@@ -152,6 +154,33 @@ Relative contribution of each sequence (normalized)
 1. 将结果存入 `data/skita.db`（表：`data_ice_run`, `data_ice_result`）
 2. 归档文件到 `data/files/ice-analysis/`
 
+## 测试
+
+测试文件：`tests/test_ice.py`，使用 `tests/data/good_example_*.ab1` 测试数据。
+
+```bash
+python -m pytest .claude/skills/ice-analysis/tests/test_ice.py -v
+```
+
+### 测试用例
+
+| 测试 | 断言 |
+|------|------|
+| `test_synthego_ice_runs_successfully` | 命令正常退出 (returncode=0) |
+| `test_output_files_generated` | 8 个输出文件完整生成且非空 |
+| `test_editing_efficiency` | 编辑效率 = 77.0% |
+| `test_r_squared` | R² >= 0.98 |
+| `test_indel_distribution` | -1bp=37%, 0(WT)=21%, +1bp=18%, -2bp=12%, +2bp=4%, -16bp=3%, -4bp=2%, -3bp=1% |
+| `test_wt_deletion_insertion_sum` | 所有 indel 类型之和 ≈ 100% (±2%) |
+| `test_contribs_top_sequences` | 序列贡献表非空 |
+| `test_discord_plot_has_cut_site` | 切割位点=231，discordance 数据完整 |
+
+### 测试数据参考值 (good_example)
+
+- gRNA: `AACCAGTTGCAGGCGCCCCA`
+- 编辑效率: 77.0%，R²: 0.98
+- WT: 21%，Deletions: 55%，Insertions: 22%
+
 ## 在线版本
 
 如果不想本地安装，可以使用 Synthego 提供的免费在线版本：
@@ -192,28 +221,13 @@ AttributeError: 'MultipleSeqAlignment' object has no attribute 'format'
 
 **原因**：Biopython 1.82+ 移除了 `MultipleSeqAlignment.format()` 方法，而 ICE (synthego-ice 1.2.0) 在 `ice/classes/pair_alignment.py` 第 80 行调用了该方法。
 
-**解决方案**：修改 ICE 包源码 `<site-packages>/ice/classes/pair_alignment.py`，将：
+**解决方案**：运行自动 patch 脚本：
 
-```python
-aln_objs = list(AlignIO.parse(f, "fasta"))
-alignment_txt = aln_objs[0].format("clustal").split('\n', 2)[2]
+```bash
+python .claude/skills/ice-analysis/scripts/patch_ice.py
 ```
 
-替换为：
-
-```python
-aln_objs = list(AlignIO.parse(f, "fasta"))
-try:
-    alignment_txt = aln_objs[0].format("clustal").split('\n', 2)[2]
-except AttributeError:
-    from io import StringIO as _SIO
-    from Bio import AlignIO as _AIO
-    _buf = _SIO()
-    _AIO.write(aln_objs[0], _buf, "clustal")
-    alignment_txt = _buf.getvalue().split('\n', 2)[2]
-```
-
-> 注意：此修改在 `pip install --upgrade synthego-ice` 后会被覆盖，需重新 patch。
+脚本会自动定位 ICE 包位置、检测是否已修复、执行补丁。重新安装 ICE 后需再次运行。
 
 ### 找不到 ab1 文件
 

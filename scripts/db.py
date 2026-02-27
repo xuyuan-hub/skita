@@ -97,7 +97,8 @@ class DB:
         return rows[0] if rows else None
 
     def insert(self, table: str, data: dict) -> int:
-        """插入记录，返回新行 id"""
+        """插入记录，返回新行 id。自动校验 schema 约束。"""
+        self._validate(table, data)
         data = {**data, "created_at": data.get("created_at", _now())}
         cols = ", ".join(data.keys())
         placeholders = ", ".join(["?"] * len(data))
@@ -226,6 +227,48 @@ class DB:
             if added:
                 conn.commit()
         return added
+
+    def _validate(self, table: str, data: dict):
+        """根据 _meta_schemas 中的 schema 定义校验数据，校验失败抛出 ValueError。"""
+        if not table.startswith("data_"):
+            return  # 系统表不校验
+
+        schema_name = table[len("data_"):]
+        row = self.query_one(
+            "SELECT schema_json FROM _meta_schemas WHERE name = ?", [schema_name]
+        )
+        if not row:
+            return  # schema 未注册，跳过校验
+
+        definition = json.loads(row["schema_json"])
+        fields = definition.get("fields", [])
+        errors = []
+
+        for f in fields:
+            name, ftype, required = f["name"], f["type"], f.get("required", False)
+            value = data.get(name)
+
+            # required 检查
+            if required and (name not in data or value is None):
+                errors.append(f"缺少必填字段: {name}")
+                continue
+
+            if value is None:
+                continue
+
+            # 类型检查
+            if ftype == "number" and not isinstance(value, (int, float)):
+                errors.append(f"字段 {name} 应为数字，实际为 {type(value).__name__}: {value!r}")
+            elif ftype == "boolean" and value not in (0, 1, True, False):
+                errors.append(f"字段 {name} 应为布尔值，实际为: {value!r}")
+            elif ftype == "json" and isinstance(value, str):
+                try:
+                    json.loads(value)
+                except (json.JSONDecodeError, TypeError):
+                    errors.append(f"字段 {name} 不是合法 JSON: {value!r}")
+
+        if errors:
+            raise ValueError(f"数据校验失败 ({table}):\n  " + "\n  ".join(errors))
 
     def log_sync(self, action: str, schema_name: str, local_id: int,
                  central_id: str, status: str, message: str = ""):

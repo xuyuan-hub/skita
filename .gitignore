@@ -1,6 +1,9 @@
 __pycache__/
+.claude/skills/*/.venv/
 .claude/skills/crispr-mutation/genomes/*
 .claude/skills/crispr-mutation/tests/data/*
 data/files/crispr-mutation/*
 data/*.db
 data/files/*
+data/workspace/*
+data/exports/*
