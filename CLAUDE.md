@@ -13,12 +13,12 @@
 skita/
 ├── .claude/
 │   └── skills/                ← Skill 包，每个对应一类实验
-│       └── crispr-mutation/    ← CRISPR/Cas9 突变分析（目前唯一 skill）
-│           ├── SKILL.md       ← Skill 使用说明（LLM 读这个来操作）
-│           ├── meta/          ← Skill 自带的 schema 定义
-│           ├── scripts/       ← pipeline 代码 + 工具脚本
-│           ├── genomes/       ← 参考基因组（大文件，不入 Git）
-│           └── tests/         ← 测试脚本和测试数据
+│       └── <skill-name>/       ← 每个 skill 是一个自包含包
+│           ├── SKILL.md        ← Skill 使用说明（LLM 读这个来操作）
+│           ├── requirements.txt← Skill 自身的依赖声明
+│           ├── meta/           ← Skill 自带的 schema 定义
+│           ├── scripts/        ← pipeline 代码 + 工具脚本
+│           └── tests/          ← 测试脚本和测试数据
 ├── CLAUDE.md                  ← 你现在读的这里
 ├── scripts/                   ← 项目级可复用工具
 │   ├── db.py                  ← SQLite 操作
@@ -90,25 +90,84 @@ data/
 
 ---
 
-## 依赖冲突处理原则
+## 依赖管理
 
-当 skill 的依赖包与项目主环境冲突时（如版本锁定、不兼容等），**在 skill 目录内创建独立虚拟环境**：
+项目使用 **uv** 管理依赖，`pyproject.toml` + `uv.lock` 确保可复现。
 
-1. **判断是否冲突** — skill 依赖的包版本与主环境不兼容，或 skill 锁定了旧版本（如 `synthego-ice` 要求 `pytest==5.2.2`）
-2. **创建 skill 级虚拟环境** — 在 skill 目录下创建 `.venv/`：
-   ```bash
-   python -m venv .claude/skills/<name>/.venv
-   .claude/skills/<name>/.venv/Scripts/pip install <packages>   # Windows
-   .claude/skills/<name>/.venv/bin/pip install <packages>       # Linux/Mac
-   ```
-3. **SKILL.md 使用正确的 Python** — 所有命令通过 skill 的 venv 执行：
-   ```bash
-   .claude/skills/<name>/.venv/Scripts/python -m <module>       # Windows
-   .claude/skills/<name>/.venv/bin/python -m <module>           # Linux/Mac
-   ```
-4. **skill 的 `.venv/` 不入 Git** — 已在 `.gitignore` 中排除
+### 两层依赖架构
 
-> 原则：主环境保持干净，skill 依赖隔离，避免互相污染。
+| 层级 | 管理方式 | 安装命令 |
+|------|----------|----------|
+| 项目级 + 兼容 skill | `pyproject.toml` [optional-dependencies] | `uv sync --all-extras` |
+| 冲突 skill（如 ice-analysis） | skill 目录下独立 `.venv/` | `pip install` 到 skill venv |
+
+### 项目级依赖
+
+```bash
+uv sync                      # 安装核心依赖
+uv sync --extra dev           # 安装开发依赖 (pytest)
+uv sync --extra crispr-mutation  # 安装 CRISPR skill 依赖
+uv sync --all-extras          # 安装全部可选依赖
+```
+
+### Skill 级虚拟环境（冲突时使用）
+
+当 skill 依赖与主环境冲突（如 `synthego-ice` 锁定 `pytest==5.2.2`）：
+
+1. 在 skill 目录创建 `.venv/`：`python -m venv .claude/skills/<name>/.venv`
+2. 用 skill venv 的 pip 安装依赖
+3. SKILL.md 中所有命令使用 `.claude/skills/<name>/.venv/Scripts/` 下的可执行文件
+4. `.venv/` 已在 `.gitignore` 中排除
+
+> 原则：主环境由 uv 管理保持干净，冲突 skill 用独立 venv 隔离。
+
+---
+
+## Skill 可移植性设计
+
+**核心理念：每个 Skill 是一个自包含的可移植包。**
+
+当另一个 skita 实例（或另一个 LLM agent 系统）拿到一个 skill 目录时，应该能够快速启动，不需要人工排查依赖。
+
+### Skill 必备文件
+
+```
+.claude/skills/<skill-name>/
+├── SKILL.md            ← 操作手册（LLM 读这个就知道怎么用）
+├── requirements.txt    ← 依赖声明（机器读这个就能安装环境）
+├── meta/               ← Schema 定义（数据库表结构随 skill 分发）
+├── scripts/            ← 代码实现
+└── tests/              ← 测试（验证 skill 可用）
+```
+
+### 快速启动流程
+
+新系统接入一个 skill 时只需三步：
+
+```bash
+# 1. 安装依赖
+pip install -r .claude/skills/<skill-name>/requirements.txt
+
+# 2. 运行测试验证
+python -m pytest .claude/skills/<skill-name>/tests/ -v
+
+# 3. 开始使用（LLM 读 SKILL.md 即可操作）
+```
+
+### requirements.txt 编写规范
+
+- **声明所有第三方依赖**，包括间接依赖中用户可能需要手动安装的包
+- **注释说明非 pip 依赖**（如 Docker 镜像、系统工具）
+- **标注已知冲突**（如 `synthego-ice` 锁定 `pytest==5.2.2`，需隔离安装）
+- **标注 post-install 操作**（如运行 `patch_ice.py` 修复兼容性）
+
+### 已有 Skill 依赖概览
+
+| Skill | requirements.txt | 隔离安装 | 外部工具 |
+|-------|-----------------|----------|----------|
+| crispr-mutation | biopython, pyfaidx, pandas, openpyxl | 否（兼容主环境） | Docker (CRISPResso2) |
+| ice-analysis | synthego-ice, biopython | **是**（冲突 pytest） | — |
+| web-dashboard | streamlit, pandas, openpyxl | 否（兼容主环境） | — |
 
 ---
 
@@ -142,6 +201,7 @@ data/
 
 每个 skill 如需持久化数据，遵循以下约定：
 
+0. **声明依赖** — 在 `<skill>/requirements.txt` 中列出所有第三方依赖
 1. **定义 Schema** — 在 `<skill>/meta/<name>.json` 中声明：
    ```json
    {

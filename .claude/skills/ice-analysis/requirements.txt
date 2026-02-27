@@ -1,0 +1,10 @@
+# ICE Analysis (Sanger Sequencing) - Skill Dependencies
+# Install: pip install -r requirements.txt
+#
+# NOTE: synthego-ice pins pytest==5.2.2, which conflicts with modern pytest.
+#       Install in an isolated venv, NOT in the main project environment.
+# TIP:  After install, run: python scripts/patch_ice.py
+#       to fix Biopython >= 1.82 compatibility.
+
+synthego-ice
+biopython>=1.82

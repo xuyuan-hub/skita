@@ -4,9 +4,24 @@ version = "0.1.0"
 description = "生物实验室数据管理框架"
 requires-python = ">=3.13"
 dependencies = [
-    "streamlit>=1.40.0",
     "pandas>=2.0.0",
+    "openpyxl>=3.1.0",
+]
+
+[project.optional-dependencies]
+crispr-mutation = [
     "biopython>=1.84",
     "pyfaidx>=0.8.0",
-    "openpyxl>=3.1.0",
+]
+# ice-analysis: 依赖 synthego-ice 锁定 pytest==5.2.2，与主环境冲突
+# 必须使用 skill 级虚拟环境: .claude/skills/ice-analysis/.venv/
+web-dashboard = [
+    "streamlit>=1.40.0",
+]
+pdf = [
+    "reportlab>=4.0",
+    "pypdf>=4.0",
+]
+dev = [
+    "pytest>=8.0",
 ]
