@@ -1,18 +1,24 @@
 """
 Skita 数据管理网页
-启动: streamlit run app.py
+启动: uv run streamlit run .claude/skills/web-dashboard/scripts/dashboard.py
 """
 
 import json
-import os
+import sys
 import pandas as pd
 import streamlit as st
 from pathlib import Path
 
+# 确定项目根目录（从 skill 目录向上跳三级）
+SKILL_DIR = Path(__file__).parent
+ROOT = SKILL_DIR.parent.parent.parent
+
+# 将项目根目录加入 path 以便 import scripts
+sys.path.insert(0, str(ROOT))
+
 from scripts.db import DB
 from scripts.files import Files
 
-ROOT = Path(__file__).parent
 FILES_ROOT = ROOT / "data" / "files"
 META_DIR = ROOT / "meta"
 

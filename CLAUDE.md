@@ -56,6 +56,22 @@ skita/
 
 ---
 
+## 文档更新原则
+
+在执行过程中遇到问题时，**必须及时更新相关文档**以避免重复踩坑：
+
+1. **遇到错误必记录** — 执行中遇到的报错、坑点、依赖问题等，必须记录到对应的 SKILL.md
+2. **记录内容包括**：
+   - 错误现象（错误信息、错误类型）
+   - 原因分析
+   - 解决方案或正确用法
+3. **更新位置**：
+   - Skill 相关问题 → `.claude/skills/<name>/SKILL.md`
+   - 项目级问题 → `CLAUDE.md`
+   - 脚本使用问题 → 对应脚本的注释或文档字符串
+
+---
+
 ## 项目级工具脚本
 
 | 脚本 | 用法 | 主要接口 |
@@ -91,7 +107,9 @@ skita/
 
 | Skill | 路径 | 数据表 | 用途 |
 |-------|------|--------|------|
-| CRISPR Mutation | `.claude/skills/crispr-mutation/` | `data_crispr_mutation_run`、`data_crispr_mutation_sample` | CRISPR/Cas9 突变分析 pipeline |
+| CRISPR Mutation | `.claude/skills/crispr-mutation/` | `data_crispr_mutation_run`、`data_crispr_mutation_sample` | CRISPR/Cas9 突变分析 pipeline (NGS) |
+| ICE Analysis | `.claude/skills/ice-analysis/` | `data_ice_run`、`data_ice_result` | CRISPR 编辑分析 (Sanger 测序) |
+| Web Dashboard | `.claude/skills/web-dashboard/` | - | Streamlit 网页界面，数据可视化管理 |
 
 ---
 

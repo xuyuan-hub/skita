@@ -1,0 +1,14 @@
+{
+  "display_name": "ICE 分析运行记录",
+  "description": "每次 ICE CRISPR 编辑分析的概要信息",
+  "version": 1,
+  "fields": [
+    {"name": "project_name", "type": "text", "required": true},
+    {"name": "input_file", "type": "file_path", "required": false},
+    {"name": "total_samples", "type": "number", "required": true},
+    {"name": "success_samples", "type": "number", "required": true},
+    {"name": "failed_samples", "type": "json", "required": false},
+    {"name": "output_dir", "type": "text", "required": true},
+    {"name": "run_date", "type": "date", "required": true}
+  ]
+}

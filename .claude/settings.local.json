@@ -1,9 +1,4 @@
 {
-  "env": {
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5"
-  },
   "permissions": {
     "allow": [
       "Bash(docker --version)",
@@ -11,7 +6,16 @@
       "Bash(python3 /c/Users/yhh/pythonProjects/skita/scripts/db.py help)",
       "Bash(python3 -c \":*)",
       "Bash(uv --version)",
-      "Bash(uv init --no-readme)"
+      "Bash(uv init --no-readme)",
+      "Bash(ping -n 8 localhost)",
+      "Bash(taskkill /F /IM streamlit.exe)",
+      "Bash(taskkill /F /IM python.exe /FI \"WINDOWTITLE eq streamlit*\")",
+      "Bash(pkill -f streamlit)",
+      "Bash(PYTHONPATH=\"$PWD\" uv run streamlit run .claude/skills/web-dashboard/scripts/dashboard.py)",
+      "Bash(curl -L -o /c/Users/yhh/pythonProjects/skita/.claude/skills/sanger-sequencing/tests/data/sample.ab1 \"https://github.com/synthego-open/ice/raw/master/tests/test_data/control.ab1\")",
+      "Bash(uv pip install synthego-ice)",
+      "Bash(SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True uv pip install synthego-ice)",
+      "Bash(synthego_ice --control .claude/skills/ice-analysis/tests/data/good_example_control.ab1 --edited .claude/skills/ice-analysis/tests/data/good_example_edited.ab1 --target AACCAGTTGCAGGCGCCCCA --out .claude/skills/ice-analysis/tests/results/good_example --verbose)"
     ],
     "additionalDirectories": [
       "C:\\Users\\yhh\\pythonProjects\\skita\\.claude\\skills\\web-dashboard"
