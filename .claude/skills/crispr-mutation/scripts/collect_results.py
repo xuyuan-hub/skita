@@ -3,17 +3,17 @@
 Collect CRISPResso analysis results (TXT and PNG files) from existing runs.
 
 Usage:
-    uv run python .claude/skills/crispresso/scripts/collect_results.py <project_dir> [--txt] [--png] [--all]
+    uv run python .claude/skills/crispr-mutation/scripts/collect_results.py <project_dir> [--txt] [--png] [--all]
 
 Examples:
     # Collect PNG files only
-    uv run python .claude/skills/crispresso/scripts/collect_results.py output/SA --png
+    uv run python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --png
 
     # Collect TXT files only
-    uv run python .claude/skills/crispresso/scripts/collect_results.py output/SA --txt
+    uv run python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --txt
 
     # Collect both
-    uv run python .claude/skills/crispresso/scripts/collect_results.py output/SA --all
+    uv run python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --all
 """
 
 import argparse

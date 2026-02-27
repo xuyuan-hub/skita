@@ -7,34 +7,40 @@
 
 ---
 
-## 本地架构（极简）
+## 本地架构
 
 ```
 skita/
 ├── .claude/
-│   └── skills/        ← Skill 包，每个对应一类实验
-│       ├── crispresso/ ← CRISPResso CRISPR/Cas9 突变分析
-│       └── pcr_analysis/ ← PCR/qPCR 数据处理
-├── CLAUDE.md          ← 你现在读的这里
-├── config.json        ← 中心数据库地址和 token（可选）
-├── scripts/           ← 可复用 Python 工具脚本
-│   ├── db.py          ← SQLite 操作（直接调用）
-│   ├── files.py       ← 文件管理
-│   └── central.py     ← 中心数据库 HTTP 客户端
-├── meta/              ← Schema JSON 定义
+│   └── skills/                ← Skill 包，每个对应一类实验
+│       └── crispr-mutation/    ← CRISPR/Cas9 突变分析（目前唯一 skill）
+│           ├── SKILL.md       ← Skill 使用说明（LLM 读这个来操作）
+│           ├── meta/          ← Skill 自带的 schema 定义
+│           ├── scripts/       ← pipeline 代码 + 工具脚本
+│           ├── genomes/       ← 参考基因组（大文件，不入 Git）
+│           └── tests/         ← 测试脚本和测试数据
+├── CLAUDE.md                  ← 你现在读的这里
+├── scripts/                   ← 项目级可复用工具
+│   ├── db.py                  ← SQLite 操作
+│   ├── files.py               ← 文件归档管理
+│   └── central.py             ← 中心数据库 HTTP 客户端
+├── meta/                      ← Schema 注册目录（skill 运行时自动安装）
 └── data/
-    ├── skita.db       ← SQLite 本地数据库
-    ├── files/         ← 原始文件存储
-    └── exports/       ← 导出结果
+    ├── skita.db               ← 唯一的本地数据库（所有 skill 共用）
+    ├── files/                 ← 文件归档存储（按 skill 分子目录）
+    └── exports/               ← 导出结果
 ```
 
 ---
 
 ## 数据存储原则
 
-1. **本地优先** — 所有数据默认存入本地 SQLite（`data/skita.db`）和本地文件（`data/files/`）
-2. **同步可选** — 仅在用户主动要求时才调用 `scripts/central.py` 同步到中心数据库
-3. **Schema 驱动** — 每类数据对应一个 `meta/<name>.json`，通过 `DB.ensure_table()` 自动建表
+1. **一库统管** — `data/skita.db` 是唯一的本地数据库，所有 skill 的数据表都建在这里（表名 `data_<schema>` 前缀区分）
+2. **Schema 双层管理**
+   - **源头在 Skill**：每个 skill 在自己的 `meta/` 下定义 schema JSON，随 skill 分发
+   - **注册在项目**：skill 运行时自动将 schema 复制到项目 `meta/`，`DB.ensure_table()` 从这里读取建表
+3. **本地优先** — 所有数据默认存本地，仅用户主动要求时才同步中心库
+4. **文件按类归档** — `Files.save(source, category="<skill名>")` → `data/files/<skill名>/<YYYY-MM>/`
 
 ---
 
@@ -43,41 +49,56 @@ skita/
 收到任务时：
 
 1. **识别 Skill** → 读 `.claude/skills/<name>/SKILL.md`
-2. **了解数据结构** → 读 `.claude/skills/<name>/Field.md`（如有）
-3. **操作本地数据** → 直接运行 `scripts/db.py` 中的函数，或写 Python 代码执行
-4. **管理文件** → 调用 `scripts/files.py`
-5. **同步中心库**（用户主动要求时）→ 调用 `scripts/central.py`
+2. **执行分析** → 按 SKILL.md 指引运行 pipeline
+3. **存储结果** → skill 自动安装 schema、写入 `data/skita.db`、归档文件到 `data/files/`
+4. **查询数据** → `DB().query("SELECT ... FROM data_<schema> WHERE ...")`
+5. **同步中心库**（用户主动要求时）→ `scripts/central.py`
 
 ---
 
-## 可用脚本
+## 项目级工具脚本
 
-直接 `python scripts/db.py` 或在代码里 `from scripts.db import DB` 调用。
+| 脚本 | 用法 | 主要接口 |
+|------|------|----------|
+| `scripts/db.py` | `from scripts.db import DB` | `query / insert / update / delete / ensure_table / list_schemas` |
+| `scripts/files.py` | `from scripts.files import Files` | `save / read_text / list / abs_path / save_export` |
+| `scripts/central.py` | `from scripts.central import Central` | `upload / download / query / connect` |
 
-| 脚本 | 主要功能 |
-|------|----------|
-| `scripts/db.py` | `DB.query / insert / update / delete / ensure_table` |
-| `scripts/files.py` | `Files.save / read / list` |
-| `scripts/central.py` | `Central.upload / download / query / connect` |
+---
+
+## Skill 数据存储规范
+
+每个 skill 如需持久化数据，遵循以下约定：
+
+1. **定义 Schema** — 在 `<skill>/meta/<name>.json` 中声明：
+   ```json
+   {
+     "display_name": "显示名",
+     "description": "说明",
+     "version": 1,
+     "fields": [
+       {"name": "字段名", "type": "text|number|date|boolean|file_path|json", "required": true}
+     ]
+   }
+   ```
+2. **自动安装** — 存储脚本在写入前将 schema 复制到项目 `meta/`，再调用 `DB.ensure_table()`
+3. **表名 = 文件名** — `meta/crispr_mutation_run.json` → 表 `data_crispr_mutation_run`
+4. **文件归档** — `Files.save(path, category="<skill名>")`
 
 ---
 
 ## 已有 Skills
 
-| Skill | 路径 | 用途 |
-|-------|------|------|
-| CRISPResso | `.claude/skills/crispresso/` | CRISPR/Cas9 突变分析 pipeline |
-| PCR 分析 | `.claude/skills/pcr_analysis/` | PCR/qPCR 数据处理 |
-
-新增 Skill 参考：`docs/skill_spec.md`
+| Skill | 路径 | 数据表 | 用途 |
+|-------|------|--------|------|
+| CRISPR Mutation | `.claude/skills/crispr-mutation/` | `data_crispr_mutation_run`、`data_crispr_mutation_sample` | CRISPR/Cas9 突变分析 pipeline |
 
 ---
 
-## 中心数据库（可选）
+## 中心数据库（可选，暂未配置）
 
-配置在 `config.json`：
+需要时在项目根目录创建 `config.json`：
 ```json
 { "central_url": "https://...", "token": "..." }
 ```
-调用方式见 `scripts/central.py`，是普通的 HTTP REST 调用，无需任何常驻进程。
-仅在用户明确要求同步时使用，日常操作全部走本地。
+调用方式见 `scripts/central.py`，仅用户明确要求同步时使用。

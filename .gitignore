@@ -1,5 +1,6 @@
 __pycache__/
-.claude/skills/crispresso/genomes/*
-.claude/skills/crispresso/tests/data/*
-data/files/crispresso/*
+.claude/skills/crispr-mutation/genomes/*
+.claude/skills/crispr-mutation/tests/data/*
+data/files/crispr-mutation/*
 data/*.db
+data/files/*

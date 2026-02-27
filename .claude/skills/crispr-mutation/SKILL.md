@@ -1,5 +1,5 @@
 ---
-name: crispresso
+name: crispr-mutation
 description: Run CRISPResso2 CRISPR/Cas9 mutation analysis pipeline. Use when user wants to analyze CRISPR editing results, process FASTQ files for mutation detection, or run batch CRISPResso analysis on multiple samples. Handles Excel/CSV sample lists, FASTQ data preparation, amplicon generation, Docker-based CRISPRessoPooled execution, and result collection.
 ---
 
@@ -79,7 +79,7 @@ import sys
 from pathlib import Path
 
 # Add skill scripts to path
-sys.path.insert(0, str(Path('.claude/skills/crispresso/scripts').resolve()))
+sys.path.insert(0, str(Path('.claude/skills/crispr-mutation/scripts').resolve()))
 
 from pipeline.runner import Pipeline, PipelineConfig
 
@@ -103,10 +103,10 @@ Use the batch script for multiple samples (self-contained, works from any projec
 
 ```bash
 # Process specific samples
-python .claude/skills/crispresso/scripts/batch_run.py --data-dir data/26_01_28 --samples SA_30,SB_19
+python .claude/skills/crispr-mutation/scripts/batch_run.py --data-dir data/26_01_28 --samples SA_30,SB_19
 
 # Process all samples in directory
-python .claude/skills/crispresso/scripts/batch_run.py --data-dir data/26_01_28 --all
+python .claude/skills/crispr-mutation/scripts/batch_run.py --data-dir data/26_01_28 --all
 ```
 
 ### Manual Docker Execution (Windows)
@@ -148,10 +148,10 @@ MSYS_NO_PATHCONV=1 docker run --rm \
    - Zygosity detection based on allele count and read thresholds
 
 7. **Save Results** (`save_results.py`，默认开启，可通过 `save_to_db=False` 关闭）
-   - 将 CSV、mutation.tsv、TXT、PNG 文件存入 `data/files/crispresso/`（通过 `scripts/files.py`）
-   - 运行记录存入 `data_crispresso_run` 表（项目名、样本数、成功/失败数、日期）
-   - 样本结果存入 `data_crispresso_sample` 表（sample_id、locus、target、突变解读、文件路径）
-   - Schema 定义：`meta/crispresso_run.json`、`meta/crispresso_sample.json`
+   - 将 CSV、mutation.tsv、TXT、PNG 文件存入 `data/files/crispr-mutation/`（通过 `scripts/files.py`）
+   - 运行记录存入 `data_crispr_mutation_run` 表（项目名、样本数、成功/失败数、日期）
+   - 样本结果存入 `data_crispr_mutation_sample` 表（sample_id、locus、target、突变解读、文件路径）
+   - Schema 定义：`meta/crispr_mutation_run.json`、`meta/crispr_mutation_sample.json`
 
 ## Key Data Flow
 
@@ -199,13 +199,13 @@ Results in `<output_dir>/<project_name>/`:
 
 ```bash
 # Collect PNG files
-python .claude/skills/crispresso/scripts/collect_results.py output/SA --png
+python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --png
 
 # Collect TXT files
-python .claude/skills/crispresso/scripts/collect_results.py output/SA --txt
+python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --txt
 
 # Collect both
-python .claude/skills/crispresso/scripts/collect_results.py output/SA --all
+python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --all
 ```
 
 ## Mutation Interpretation
@@ -213,7 +213,7 @@ python .claude/skills/crispresso/scripts/collect_results.py output/SA --all
 After collecting TXT results:
 
 ```bash
-python .claude/skills/crispresso/scripts/mutation_define_NGS.py --path output/SA/SA_Results_Txt
+python .claude/skills/crispr-mutation/scripts/mutation_define_NGS.py --path output/SA/SA_Results_Txt
 ```
 
 Outputs `<project>_mutation.tsv` with classifications:
@@ -264,7 +264,7 @@ docker load -i crispresso2_latest.tar
 
 获取方式：
 - 联系 **2827883762@qq.com** 获取参考基因组文件
-- 将 `all.con` 和 `all.locus_brief_info.7.0` 放入 `.claude/skills/crispresso/genomes/` 目录
+- 将 `all.con` 和 `all.locus_brief_info.7.0` 放入 `.claude/skills/crispr-mutation/genomes/` 目录
 
 ### Docker 未启动
 
@@ -303,13 +303,13 @@ docker --version
 docker image inspect pinellolab/crispresso2:latest --format '{{.Id}}'
 
 # 3. 参考基因组文件
-ls .claude/skills/crispresso/genomes/all.con
-ls .claude/skills/crispresso/genomes/all.locus_brief_info.7.0
+ls .claude/skills/crispr-mutation/genomes/all.con
+ls .claude/skills/crispr-mutation/genomes/all.locus_brief_info.7.0
 
 # 4. 测试数据
-ls .claude/skills/crispresso/tests/data/GOA_8/GOA_8.csv
-ls .claude/skills/crispresso/tests/data/GOA_8/GOA_8_HQ_R1.fq.gz
-ls .claude/skills/crispresso/tests/data/GOA_8/GOA_8_HQ_R2.fq.gz
+ls .claude/skills/crispr-mutation/tests/data/GOA_8/GOA_8.csv
+ls .claude/skills/crispr-mutation/tests/data/GOA_8/GOA_8_HQ_R1.fq.gz
+ls .claude/skills/crispr-mutation/tests/data/GOA_8/GOA_8_HQ_R2.fq.gz
 ```
 
 所有命令都应正常输出，无报错。如果缺少文件，参考下方 Troubleshooting 章节。
@@ -320,13 +320,13 @@ ls .claude/skills/crispresso/tests/data/GOA_8/GOA_8_HQ_R2.fq.gz
 
 ```bash
 # 仅测试预处理阶段（不需要 Docker，约 1 秒）
-python -m pytest .claude/skills/crispresso/tests/test_pipeline.py -k "preprocess" -v
+python -m pytest .claude/skills/crispr-mutation/tests/test_pipeline.py -k "preprocess" -v
 
 # 完整测试（需要 Docker + CRISPResso2 镜像 + FASTQ 数据，约 9 分钟）
-python -m pytest .claude/skills/crispresso/tests/test_pipeline.py -v
+python -m pytest .claude/skills/crispr-mutation/tests/test_pipeline.py -v
 
 # 仅测试突变分析（需要 GOA_8_Results_Txt/ 预期结果文件）
-python -m pytest .claude/skills/crispresso/tests/test_pipeline.py -k "mutation" -v
+python -m pytest .claude/skills/crispr-mutation/tests/test_pipeline.py -k "mutation" -v
 ```
 
 ### 第三步：核对结果

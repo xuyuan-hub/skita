@@ -1,0 +1,14 @@
+{
+  "display_name": "CRISPR 突变分析样本结果",
+  "description": "每个样本的突变分析结果",
+  "version": 1,
+  "fields": [
+    {"name": "run_id", "type": "number", "required": true},
+    {"name": "sample_id", "type": "text", "required": true},
+    {"name": "locus", "type": "text", "required": false},
+    {"name": "target", "type": "text", "required": false},
+    {"name": "interpretation", "type": "text", "required": true},
+    {"name": "txt_file", "type": "file_path", "required": false},
+    {"name": "png_file", "type": "file_path", "required": false}
+  ]
+}

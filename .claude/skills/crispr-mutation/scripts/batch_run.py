@@ -3,8 +3,8 @@
 Batch run CRISPResso analysis for multiple samples.
 
 Usage:
-    python .claude/skills/crispresso/scripts/batch_run.py --data-dir data/26_01_28 --samples SA_30,SB_19
-    python .claude/skills/crispresso/scripts/batch_run.py --data-dir data/26_01_28 --all
+    python .claude/skills/crispr-mutation/scripts/batch_run.py --data-dir data/26_01_28 --samples SA_30,SB_19
+    python .claude/skills/crispr-mutation/scripts/batch_run.py --data-dir data/26_01_28 --all
 """
 
 import argparse

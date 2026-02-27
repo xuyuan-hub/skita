@@ -1,5 +1,5 @@
 {
-  "display_name": "CRISPResso 样本结果",
+  "display_name": "CRISPR 突变分析样本结果",
   "description": "每个样本的突变分析结果",
   "version": 1,
   "fields": [

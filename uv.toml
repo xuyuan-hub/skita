@@ -1,0 +1,5 @@
+# uv 配置 - 使用清华 PyPI 镜像
+
+[[index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true

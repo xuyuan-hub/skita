@@ -13,8 +13,12 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# 项目根目录
-PROJECT_ROOT = Path(__file__).resolve().parents[4]  # scripts/ -> crispresso/ -> skills/ -> .claude/ -> skita/
+# 路径常量
+SKILL_DIR = Path(__file__).resolve().parents[1]      # scripts/ -> crispr-mutation/
+SKILL_META_DIR = SKILL_DIR / "meta"                   # skill 自带的 schema 定义
+PROJECT_ROOT = Path(__file__).resolve().parents[4]    # scripts/ -> crispr-mutation/ -> skills/ -> .claude/ -> skita/
+PROJECT_META_DIR = PROJECT_ROOT / "meta"              # 项目的 meta/ 目录
+
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # 当前 scripts 目录（用于导入 mutation_define_NGS）
@@ -25,7 +29,17 @@ if str(SCRIPTS_DIR) not in sys.path:
 from scripts.db import DB
 from scripts.files import Files
 
+import shutil
 import pandas as pd
+
+
+def _install_schemas():
+    """将 skill 自带的 schema 文件同步到项目 meta/ 目录，ensure_table 才能找到。"""
+    PROJECT_META_DIR.mkdir(parents=True, exist_ok=True)
+    for schema_file in SKILL_META_DIR.glob("*.json"):
+        target = PROJECT_META_DIR / schema_file.name
+        if not target.exists() or target.read_bytes() != schema_file.read_bytes():
+            shutil.copy2(schema_file, target)
 
 
 def save_pipeline_results(
@@ -58,9 +72,10 @@ def save_pipeline_results(
         db = DB()
         files = Files()
 
-        # 确保表存在
-        db.ensure_table("crispresso_run")
-        db.ensure_table("crispresso_sample")
+        # 将 skill 自带的 schema 同步到项目 meta/，然后建表
+        _install_schemas()
+        db.ensure_table("crispr_mutation_run")
+        db.ensure_table("crispr_mutation_sample")
 
         # --- 读取输入 CSV 获取 locus/target 信息 ---
         # 支持多种 CSV 格式：列名可能是 GeoID/pid, Locus/locus, Target/target
@@ -116,19 +131,19 @@ def save_pipeline_results(
 
         # --- 保存文件 ---
         # 保存 CSV
-        csv_result = files.save(str(csv_path), "crispresso", f"{project_name}.csv")
+        csv_result = files.save(str(csv_path), "crispr-mutation", f"{project_name}.csv")
         csv_rel = csv_result["relative_path"]
         _log(f"    CSV 已存储: {csv_rel}")
 
         # 保存 mutation.tsv
         mutation_rel = None
         if mutation_tsv and mutation_tsv.exists():
-            mut_result = files.save(str(mutation_tsv), "crispresso", f"{project_name}_mutation.tsv")
+            mut_result = files.save(str(mutation_tsv), "crispr-mutation", f"{project_name}_mutation.tsv")
             mutation_rel = mut_result["relative_path"]
             _log(f"    mutation.tsv 已存储: {mutation_rel}")
 
         # --- 插入 run 记录 ---
-        run_id = db.insert("data_crispresso_run", {
+        run_id = db.insert("data_crispr_mutation_run", {
             "project_name": project_name,
             "csv_file": csv_rel,
             "r1_file": str(r1_path),
@@ -151,7 +166,7 @@ def save_pipeline_results(
             txt_rel = None
             txt_file = results_txt_dir / f"{sample_id}.txt"
             if txt_file.exists():
-                txt_result = files.save(str(txt_file), "crispresso", f"{sample_id}.txt")
+                txt_result = files.save(str(txt_file), "crispr-mutation", f"{sample_id}.txt")
                 txt_rel = txt_result["relative_path"]
 
             # 保存 PNG 文件
@@ -159,13 +174,13 @@ def save_pipeline_results(
             if results_png_dir.exists():
                 png_file = results_png_dir / f"{sample_id}.png"
                 if png_file.exists():
-                    png_result = files.save(str(png_file), "crispresso", f"{sample_id}.png")
+                    png_result = files.save(str(png_file), "crispr-mutation", f"{sample_id}.png")
                     png_rel = png_result["relative_path"]
 
             # 获取突变解读
             interpretation = mutations.get(sample_id, "")
 
-            db.insert("data_crispresso_sample", {
+            db.insert("data_crispr_mutation_sample", {
                 "run_id": run_id,
                 "sample_id": sample_id,
                 "locus": info.get("Locus", ""),

@@ -18,7 +18,7 @@ import pytest
 from pathlib import Path
 
 # All paths relative to skill directory (self-contained)
-SKILL_DIR = Path(__file__).resolve().parents[1]  # tests/ -> crispresso/
+SKILL_DIR = Path(__file__).resolve().parents[1]  # tests/ -> crispr-mutation/
 SCRIPTS_DIR = SKILL_DIR / "scripts"
 TEST_DATA_DIR = SKILL_DIR / "tests" / "data" / "GOA_8"
 

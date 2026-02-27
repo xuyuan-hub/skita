@@ -305,7 +305,7 @@ class Pipeline:
         Stage 2: Run CRISPRessoPooled.
         """
         self._log(">>> [Stage 2] Running CRISPRessoPooled (Docker)...")
-        self._progress("crispresso", 0)
+        self._progress("crispr-mutation", 0)
 
         if not self.amplicon_file or not self.amplicon_file.exists():
             self._log("[ERROR] Amplicon file not found")
@@ -320,7 +320,7 @@ class Pipeline:
         )
 
         self.pool_dir = self.work_dir / "CRISPRessoPooled_on_amp_aa"
-        self._progress("crispresso", 100)
+        self._progress("crispr-mutation", 100)
 
         if result.success:
             self._log("    CRISPRessoPooled completed successfully")

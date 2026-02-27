@@ -1,6 +1,6 @@
 {
-  "display_name": "CRISPResso 运行记录",
-  "description": "每次 CRISPResso pipeline 运行的概要信息",
+  "display_name": "CRISPR 突变分析运行记录",
+  "description": "每次 CRISPR 突变分析 pipeline 运行的概要信息",
   "version": 1,
   "fields": [
     {"name": "project_name", "type": "text", "required": true},

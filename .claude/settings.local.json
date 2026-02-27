@@ -1,10 +1,17 @@
 {
+  "env": {
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.7",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5"
+  },
   "permissions": {
     "allow": [
       "Bash(docker --version)",
       "Bash(docker image inspect pinellolab/crispresso2:latest --format '{{.Id}}')",
       "Bash(python3 /c/Users/yhh/pythonProjects/skita/scripts/db.py help)",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "Bash(uv --version)",
+      "Bash(uv init --no-readme)"
     ]
   }
 }
