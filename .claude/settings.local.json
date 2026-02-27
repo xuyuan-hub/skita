@@ -12,6 +12,9 @@
       "Bash(python3 -c \":*)",
       "Bash(uv --version)",
       "Bash(uv init --no-readme)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\yhh\\pythonProjects\\skita\\.claude\\skills\\web-dashboard"
     ]
   }
 }
