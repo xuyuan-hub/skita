@@ -1,0 +1,18 @@
+{
+  "display_name": "生工引物订购记录",
+  "description": "从生工生物引物合成订购表中提取的订单和引物数据",
+  "version": 1,
+  "fields": [
+    {"name": "source_file", "type": "file_path", "required": true},
+    {"name": "customer_name", "type": "text", "required": false},
+    {"name": "customer_phone", "type": "text", "required": false},
+    {"name": "customer_email", "type": "text", "required": false},
+    {"name": "company_name", "type": "text", "required": false},
+    {"name": "order_date", "type": "date", "required": false},
+    {"name": "payment_method", "type": "text", "required": false},
+    {"name": "primer_count", "type": "number", "required": true},
+    {"name": "primer_data", "type": "json", "required": true},
+    {"name": "order_info", "type": "json", "required": false},
+    {"name": "output_file", "type": "file_path", "required": false}
+  ]
+}

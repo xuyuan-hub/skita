@@ -7,3 +7,4 @@ data/*.db
 data/files/*
 data/workspace/*
 data/exports/*
+.env

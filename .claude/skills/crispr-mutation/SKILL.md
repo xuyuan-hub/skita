@@ -26,11 +26,11 @@ Scripts auto-detect their own `genomes/` directory as default reference path.
 | Module | Description |
 |--------|-------------|
 | `runner.py` | Main pipeline controller, orchestrates all 5 stages via `Pipeline` class and `PipelineConfig` dataclass |
-| `locus_filter.py` | Filters locus information from reference database (replaces R script `1-new.R`) |
-| `sequence_extractor.py` | Extracts sequences from reference genome using pyfaidx (replaces `bedtools getfasta`) |
+| `locus_filter.py` | Filters locus information from reference database |
+| `sequence_extractor.py` | Extracts sequences from reference genome using pyfaidx |
 | `sgrna_locator.py` | Locates sgRNA sequences (forward + reverse complement) and calculates amplicon coordinates |
 | `crispresso.py` | Docker wrapper for CRISPResso2, handles volume mounting, path translation, pooled/single runs |
-| `data_combiner.py` | Combines data from multiple sources to generate amplicon file (replaces `combine.R`) |
+| `data_combiner.py` | Combines data from multiple sources to generate amplicon file |
 
 ### Utility Scripts (`scripts/`)
 

@@ -1,0 +1,3 @@
+# email-sender skill 依赖
+# 全部使用 Python 标准库 (smtplib, email)，无第三方依赖
+# .env 文件解析也使用内置实现，无需 python-dotenv

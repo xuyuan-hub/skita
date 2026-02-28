@@ -1,0 +1,17 @@
+{
+  "display_name": "邮件发送记录",
+  "description": "通过 SMTP 发送的邮件历史记录",
+  "version": 1,
+  "fields": [
+    {"name": "to_email", "type": "text", "required": true},
+    {"name": "subject", "type": "text", "required": true},
+    {"name": "content_type", "type": "text", "required": true},
+    {"name": "has_attachments", "type": "boolean", "required": true},
+    {"name": "attachment_names", "type": "json", "required": false},
+    {"name": "smtp_server", "type": "text", "required": false},
+    {"name": "sender", "type": "text", "required": false},
+    {"name": "success", "type": "boolean", "required": true},
+    {"name": "error_message", "type": "text", "required": false},
+    {"name": "send_date", "type": "date", "required": true}
+  ]
+}
