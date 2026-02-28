@@ -79,7 +79,7 @@ import sys
 from pathlib import Path
 
 # Add skill scripts to path
-sys.path.insert(0, str(Path('.claude/skills/crispr-mutation/scripts').resolve()))
+sys.path.insert(0, str(Path('scripts').resolve()))
 
 from pipeline.runner import Pipeline, PipelineConfig
 
@@ -103,10 +103,10 @@ Use the batch script for multiple samples (self-contained, works from any projec
 
 ```bash
 # Process specific samples
-python .claude/skills/crispr-mutation/scripts/batch_run.py --data-dir data/26_01_28 --samples SA_30,SB_19
+python scripts/batch_run.py --data-dir data/26_01_28 --samples SA_30,SB_19
 
 # Process all samples in directory
-python .claude/skills/crispr-mutation/scripts/batch_run.py --data-dir data/26_01_28 --all
+python scripts/batch_run.py --data-dir data/26_01_28 --all
 ```
 
 ### Manual Docker Execution (Windows)
@@ -115,8 +115,8 @@ On Windows, set `MSYS_NO_PATHCONV=1` to prevent path conversion issues:
 
 ```bash
 MSYS_NO_PATHCONV=1 docker run --rm \
-  -v "C:\path\to\output:/DATA" \
-  -v "C:\path\to\fastq:/INPUT:ro" \
+  -v "/path/to/output:/DATA" \
+  -v "/path/to/fastq:/INPUT:ro" \
   pinellolab/crispresso2:latest \
   CRISPRessoPooled \
   -r1 /INPUT/sample_R1.fq.gz \
@@ -199,13 +199,13 @@ Results in `<output_dir>/<project_name>/`:
 
 ```bash
 # Collect PNG files
-python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --png
+python scripts/collect_results.py output/SA --png
 
 # Collect TXT files
-python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --txt
+python scripts/collect_results.py output/SA --txt
 
 # Collect both
-python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --all
+python scripts/collect_results.py output/SA --all
 ```
 
 ## Mutation Interpretation
@@ -213,7 +213,7 @@ python .claude/skills/crispr-mutation/scripts/collect_results.py output/SA --all
 After collecting TXT results:
 
 ```bash
-python .claude/skills/crispr-mutation/scripts/mutation_define_NGS.py --path output/SA/SA_Results_Txt
+python scripts/mutation_define_NGS.py --path output/SA/SA_Results_Txt
 ```
 
 Outputs `<project>_mutation.tsv` with classifications:
@@ -264,7 +264,7 @@ docker load -i crispresso2_latest.tar
 
 获取方式：
 - 联系 **2827883762@qq.com** 获取参考基因组文件
-- 将 `all.con` 和 `all.locus_brief_info.7.0` 放入 `.claude/skills/crispr-mutation/genomes/` 目录
+- 将 `all.con` 和 `all.locus_brief_info.7.0` 放入 `<path_to_skill>/genomes/` 目录
 
 ### Docker 未启动
 
@@ -276,7 +276,7 @@ docker load -i crispresso2_latest.tar
 
 ### Docker Path Issues (Windows)
 
-如果 CRISPResso 输出路径显示为 `E:/Git/data/...`，确保设置了 `MSYS_NO_PATHCONV=1`。
+如果 CRISPResso 输出路径显示为 `[A~Z]:/Git/data/...`，确保设置了 `MSYS_NO_PATHCONV=1`。
 Pipeline 脚本已自动处理此问题。
 
 ### Guide Not Found in Amplicon
@@ -303,13 +303,13 @@ docker --version
 docker image inspect pinellolab/crispresso2:latest --format '{{.Id}}'
 
 # 3. 参考基因组文件
-ls .claude/skills/crispr-mutation/genomes/all.con
-ls .claude/skills/crispr-mutation/genomes/all.locus_brief_info.7.0
+ls genomes/all.con
+ls genomes/all.locus_brief_info.7.0
 
 # 4. 测试数据
-ls .claude/skills/crispr-mutation/tests/data/GOA_8/GOA_8.csv
-ls .claude/skills/crispr-mutation/tests/data/GOA_8/GOA_8_HQ_R1.fq.gz
-ls .claude/skills/crispr-mutation/tests/data/GOA_8/GOA_8_HQ_R2.fq.gz
+ls tests/data/GOA_8/GOA_8.csv
+ls tests/data/GOA_8/GOA_8_HQ_R1.fq.gz
+ls tests/data/GOA_8/GOA_8_HQ_R2.fq.gz
 ```
 
 所有命令都应正常输出，无报错。如果缺少文件，参考下方 Troubleshooting 章节。
@@ -320,13 +320,13 @@ ls .claude/skills/crispr-mutation/tests/data/GOA_8/GOA_8_HQ_R2.fq.gz
 
 ```bash
 # 仅测试预处理阶段（不需要 Docker，约 1 秒）
-python -m pytest .claude/skills/crispr-mutation/tests/test_pipeline.py -k "preprocess" -v
+python -m pytest tests/test_pipeline.py -k "preprocess" -v
 
 # 完整测试（需要 Docker + CRISPResso2 镜像 + FASTQ 数据，约 9 分钟）
-python -m pytest .claude/skills/crispr-mutation/tests/test_pipeline.py -v
+python -m pytest tests/test_pipeline.py -v
 
 # 仅测试突变分析（需要 GOA_8_Results_Txt/ 预期结果文件）
-python -m pytest .claude/skills/crispr-mutation/tests/test_pipeline.py -k "mutation" -v
+python -m pytest tests/test_pipeline.py -k "mutation" -v
 ```
 
 ### 第三步：核对结果
